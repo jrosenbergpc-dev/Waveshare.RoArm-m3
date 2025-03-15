@@ -10,16 +10,18 @@ namespace Waveshare.RoArm_m3
 {
 	public static class CommandDefinitions
 	{
-		public static List<string> GetAvailableCommands()
+		public static Dictionary<string, bool> GetAvailableCommands()
 		{
 			return typeof(CommandDefinitions)
-		.GetMethods(BindingFlags.Public | BindingFlags.Static)
-		.Where(m => m.Name != nameof(GetAvailableCommands) && m.Name != nameof(ExecuteCommandByName)) // Exclude itself
-		.Select(m => m.Name)
-		.ToList();
+				.GetMethods(BindingFlags.Public | BindingFlags.Static)
+				.Where(m => m.Name != nameof(GetAvailableCommands) && m.Name != nameof(GetJsonCommandByName)) // Exclude itself
+				.ToDictionary(
+					m => m.Name,
+					m => m.GetParameters().Any() // Returns true if the method has parameters, false otherwise
+				);
 		}
 
-		public static JsonCommand ExecuteCommandByName(string commandName, params object[] parameters)
+		public static JsonCommand GetJsonCommandByName(string commandName, params object[] parameters)
 		{
 			MethodInfo method = typeof(CommandDefinitions)
 				.GetMethods(BindingFlags.Public | BindingFlags.Static)
@@ -39,6 +41,23 @@ namespace Waveshare.RoArm_m3
 
 			// Invoke the method dynamically
 			return (JsonCommand)method.Invoke(null, parameters);
+		}
+
+		public static List<(string Name, Type Type)> GetCommandParameters(string commandName)
+		{
+			MethodInfo method = typeof(CommandDefinitions)
+				.GetMethods(BindingFlags.Public | BindingFlags.Static)
+				.FirstOrDefault(m => m.Name == commandName);
+
+			if (method == null)
+			{
+				throw new ArgumentException($"No command found with the name: {commandName}");
+			}
+
+			// Get parameter information
+			return method.GetParameters()
+				.Select(p => (p.Name, p.ParameterType))
+				.ToList();
 		}
 
 		public static JsonCommand EmergencyStop()
@@ -74,7 +93,7 @@ namespace Waveshare.RoArm_m3
 			return new JsonCommand("Light Control", xTemp);
 		}
 
-		public static JsonCommand SingleJointMovement(int joint, double degrees, int speed, int acceleration)
+		public static JsonCommand SingleJointMovement(int joint, double degrees, double speed, double acceleration)
 		{
 			JObject xTemp = new JObject();
 			xTemp.Add("T", 101);
@@ -86,7 +105,7 @@ namespace Waveshare.RoArm_m3
 			return new JsonCommand("Single Joint Command", xTemp);
 		}
 
-		public static JsonCommand HandControl(int degrees, int speed, int acceleration)
+		public static JsonCommand HandControl(double degrees, double speed, double acceleration)
 		{
 			JObject xTemp = new JObject();
 			xTemp.Add("T", 106);
@@ -97,7 +116,7 @@ namespace Waveshare.RoArm_m3
 			return new JsonCommand("Hand Control", xTemp);
 		}
 
-		public static JsonCommand HandTorque(int torque)
+		public static JsonCommand HandTorque(double torque)
 		{
 			JObject xTemp = new JObject();
 			xTemp.Add("T", 107);
