@@ -14,7 +14,7 @@ namespace Waveshare.RoArm_m3
 		{
 			return typeof(CommandDefinitions)
 				.GetMethods(BindingFlags.Public | BindingFlags.Static)
-				.Where(m => m.Name != nameof(GetAvailableCommands) && m.Name != nameof(GetJsonCommandByName)) // Exclude itself
+				.Where(m => m.Name != nameof(GetAvailableCommands) && m.Name != nameof(GetJsonCommandByName) && m.Name != nameof(GetCommandParameters)) // Exclude itself
 				.ToDictionary(
 					m => m.Name,
 					m => m.GetParameters().Any() // Returns true if the method has parameters, false otherwise
