@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Waveshare.RoArm_m3
 		public JsonCommand(string commandName, JObject json)
 		{
 			Command = commandName;
-			_rawjson = json.ToString();
+			_rawjson = JsonConvert.SerializeObject(json, Formatting.None);
 		}
 	}
 }
